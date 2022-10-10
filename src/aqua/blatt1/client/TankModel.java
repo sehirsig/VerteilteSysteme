@@ -1,4 +1,4 @@
-package Übungsblatt1.aqua.blatt1.client;
+package aqua.blatt1.client;
 
 import java.util.Collections;
 import java.util.Iterator;
@@ -8,8 +8,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-import Übungsblatt1.aqua.blatt1.common.Direction;
-import Übungsblatt1.aqua.blatt1.common.FishModel;
+import aqua.blatt1.common.Direction;
+import aqua.blatt1.common.FishModel;
 
 public class TankModel extends Observable implements Iterable<FishModel> {
 

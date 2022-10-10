@@ -1,4 +1,4 @@
-package Übungsblatt1.aqua.blatt1.client;
+package aqua.blatt1.client;
 
 import java.awt.Component;
 import java.awt.event.ActionEvent;

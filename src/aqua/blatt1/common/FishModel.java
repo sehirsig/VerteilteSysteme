@@ -1,4 +1,4 @@
-package Übungsblatt1.aqua.blatt1.common;
+package aqua.blatt1.common;
 
 import java.io.Serializable;
 import java.util.Random;

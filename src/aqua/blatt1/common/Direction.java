@@ -1,4 +1,4 @@
-package Übungsblatt1.aqua.blatt1.common;
+package aqua.blatt1.common;
 
 public enum Direction {
 	LEFT(-1), RIGHT(+1);

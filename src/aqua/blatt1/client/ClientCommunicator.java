@@ -1,15 +1,15 @@
-package Übungsblatt1.aqua.blatt1.client;
+package aqua.blatt1.client;
 
 import java.net.InetSocketAddress;
 
 import messaging.Endpoint;
 import messaging.Message;
-import Übungsblatt1.aqua.blatt1.common.FishModel;
-import Übungsblatt1.aqua.blatt1.common.Properties;
-import Übungsblatt1.aqua.blatt1.common.msgtypes.DeregisterRequest;
-import Übungsblatt1.aqua.blatt1.common.msgtypes.HandoffRequest;
-import Übungsblatt1.aqua.blatt1.common.msgtypes.RegisterRequest;
-import Übungsblatt1.aqua.blatt1.common.msgtypes.RegisterResponse;
+import aqua.blatt1.common.FishModel;
+import aqua.blatt1.common.Properties;
+import aqua.blatt1.common.msgtypes.DeregisterRequest;
+import aqua.blatt1.common.msgtypes.HandoffRequest;
+import aqua.blatt1.common.msgtypes.RegisterRequest;
+import aqua.blatt1.common.msgtypes.RegisterResponse;
 
 public class ClientCommunicator {
 	private final Endpoint endpoint;

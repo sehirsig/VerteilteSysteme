@@ -1,11 +1,11 @@
-package Übungsblatt1.aqua.blatt1.client;
+package aqua.blatt1.client;
 
 import java.awt.Image;
 
 import javax.swing.ImageIcon;
 
-import Übungsblatt1.aqua.blatt1.common.Direction;
-import Übungsblatt1.aqua.blatt1.common.FishModel;
+import aqua.blatt1.common.Direction;
+import aqua.blatt1.common.FishModel;
 
 public class FishView {
 	private static Image imgBlackLeft = new ImageIcon(

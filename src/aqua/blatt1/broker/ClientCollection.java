@@ -1,4 +1,4 @@
-package Übungsblatt1.aqua.blatt1.broker;
+package aqua.blatt1.broker;
 
 import java.util.ArrayList;
 import java.util.List;
