@@ -12,20 +12,16 @@ import aqua.blatt1.common.msgtypes.RegisterRequest;
 import java.net.InetSocketAddress;
 
 public class Broker {
-    static Endpoint endpoint;
-    static ClientCollection<InetSocketAddress> cc;
-    static int tankcounter;
+    static Endpoint endpoint = new Endpoint(4711);
+    static ClientCollection<InetSocketAddress> cc = new ClientCollection<InetSocketAddress>();
+    static int tankcounter = 0;
 
     public static void main(String[] args) {
-        int port = 4711;
-        endpoint = new Endpoint(port);
-        cc = new ClientCollection<InetSocketAddress>();
-        tankcounter = 1;
-        System.out.println("Broker created on Port: " + port);
-        broker();
+        Broker broker = new Broker();
+        broker.broker();
     }
 
-    public static void broker() {
+    public void broker() {
         while (true) {
             Message msg = endpoint.blockingReceive();
 
