@@ -19,7 +19,16 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class Broker {
 
-    private class BrokerTask {
+    private class BrokerTask implements Runnable {
+        Message message;
+        BrokerTask(Message msg) {
+            message = msg;
+        }
+        @Override
+        public void run() {
+            this.verarbeiten(message);
+        }
+
         public void verarbeiten(Message msg) {
             if (msg.getPayload() instanceof RegisterRequest)
                 register(msg);
@@ -31,6 +40,7 @@ public class Broker {
                 deregister(msg);
 
             if (msg.getPayload() instanceof PoisonPill)
+                System.out.println("Broker stopped with Poison Pill.");
                 System.exit(0);
         }
 
@@ -93,16 +103,14 @@ public class Broker {
     public void broker() {
         executor.execute(() -> {
             JOptionPane.showMessageDialog(null, "Press OK to stop server");
+            System.out.println("Broker stopped with OK Message box.");
             stopRequested = true;
         });
         while (!stopRequested) {
             Message msg = endpoint.blockingReceive();
-            BrokerTask brokerTask = new BrokerTask();
-            executor.execute(() -> {
-                brokerTask.verarbeiten(msg);
-            });
+            BrokerTask brokerTask = new BrokerTask(msg);
+            executor.execute(brokerTask);
         }
+        executor.shutdown();
     }
-
-
 }
