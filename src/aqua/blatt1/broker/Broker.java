@@ -85,7 +85,7 @@ public class Broker {
             lock.readLock().unlock();
         }
     }
-    static int NUMTHREADS = 4;
+    static int NUMTHREADS = 16;
 
     volatile ExecutorService executor = Executors.newFixedThreadPool(NUMTHREADS);
 
