@@ -42,6 +42,7 @@ public class Broker {
             if (msg.getPayload() instanceof PoisonPill) {
                 System.out.println("Broker stopped with Poison Pill.");
                 executor.shutdown();
+                System.exit(0);
             }
         }
 
