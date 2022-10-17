@@ -4,27 +4,23 @@ import aqua.blatt1.common.Direction;
 import aqua.blatt1.common.FishModel;
 import aqua.blatt1.common.msgtypes.DeregisterRequest;
 import aqua.blatt1.common.msgtypes.RegisterResponse;
+import aqua.blatt2.broker.PoisonPill;
 import messaging.Endpoint;
 import messaging.Message;
 import aqua.blatt1.common.msgtypes.HandoffRequest;
 import aqua.blatt1.common.msgtypes.RegisterRequest;
 
+import javax.swing.*;
 import java.net.InetSocketAddress;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class Broker {
-    static Endpoint endpoint = new Endpoint(4711);
-    static ClientCollection<InetSocketAddress> cc = new ClientCollection<InetSocketAddress>();
-    static int tankcounter = 0;
 
-    public static void main(String[] args) {
-        Broker broker = new Broker();
-        broker.broker();
-    }
-
-    public void broker() {
-        while (true) {
-            Message msg = endpoint.blockingReceive();
-
+    private class BrokerTask {
+        public void verarbeiten(Message msg) {
             if (msg.getPayload() instanceof RegisterRequest)
                 register(msg);
 
@@ -33,39 +29,80 @@ public class Broker {
 
             if (msg.getPayload() instanceof DeregisterRequest)
                 deregister(msg);
+
+            if (msg.getPayload() instanceof PoisonPill)
+                System.exit(0);
+        }
+
+        public static void register(Message msg) {
+            lock.writeLock().lock();
+            String clientName = "tank" + tankcounter++;
+            cc.add(clientName, msg.getSender());
+            endpoint.send(msg.getSender(), new RegisterResponse(clientName));
+            System.out.println("New Client added: " + clientName);
+            lock.writeLock().unlock();
+        }
+
+        public static void deregister(Message msg) {
+            lock.writeLock().lock();
+            DeregisterRequest msg_de = (DeregisterRequest) msg.getPayload();
+            int getIndex = cc.indexOf(msg.getSender());
+            System.out.println("Removed: " + msg_de.getId());
+            cc.remove(getIndex);
+            lock.writeLock().unlock();
+        }
+
+        public static void handoffFish(Message msg) {
+            lock.readLock().lock();
+            HandoffRequest msg_de = (HandoffRequest) msg.getPayload();
+            int senderIndex = cc.indexOf(msg.getSender());
+            FishModel fish = msg_de.getFish();
+
+            Direction direction = msg_de.getFish().getDirection();
+            InetSocketAddress receiverIndex;
+
+            if (direction == Direction.LEFT) {
+                receiverIndex = (InetSocketAddress) cc.getLeftNeighorOf(senderIndex);
+                endpoint.send(receiverIndex, new HandoffRequest(fish));
+            } else if (direction == Direction.RIGHT) {
+                receiverIndex = (InetSocketAddress) cc.getRightNeighorOf(senderIndex);
+                endpoint.send(receiverIndex, new HandoffRequest(fish));
+            } else {
+                System.out.println("Direction error");
+            }
+            lock.readLock().unlock();
+        }
+    }
+    static int NUMTHREADS = 4;
+
+    ExecutorService executor = Executors.newFixedThreadPool(NUMTHREADS);
+
+    static volatile ReadWriteLock lock = new ReentrantReadWriteLock();
+
+    static Endpoint endpoint = new Endpoint(4711);
+    static volatile ClientCollection<InetSocketAddress> cc = new ClientCollection<InetSocketAddress>();
+    static volatile int tankcounter = 0;
+
+    static volatile boolean stopRequested = false;
+
+    public static void main(String[] args) {
+        Broker broker = new Broker();
+        broker.broker();
+    }
+
+    public void broker() {
+        executor.execute(() -> {
+            JOptionPane.showMessageDialog(null, "Press OK to stop server");
+            stopRequested = true;
+        });
+        while (!stopRequested) {
+            Message msg = endpoint.blockingReceive();
+            BrokerTask brokerTask = new BrokerTask();
+            executor.execute(() -> {
+                brokerTask.verarbeiten(msg);
+            });
         }
     }
 
-    public static void register(Message msg) {
-        String clientName = "tank" + tankcounter++;
-        cc.add(clientName, msg.getSender());
-        endpoint.send(msg.getSender(), new RegisterResponse(clientName));
-        System.out.println("New Client added: " + clientName);
-    }
 
-    public static void deregister(Message msg) {
-        DeregisterRequest msg_de = (DeregisterRequest) msg.getPayload();
-        int getIndex = cc.indexOf(msg.getSender());
-        System.out.println("Removed: " + msg_de.getId());
-        cc.remove(getIndex);
-    }
-
-    public static void handoffFish(Message msg) {
-        HandoffRequest msg_de = (HandoffRequest) msg.getPayload();
-        int senderIndex = cc.indexOf(msg.getSender());
-        FishModel fish = msg_de.getFish();
-
-        Direction direction = msg_de.getFish().getDirection();
-        InetSocketAddress receiverIndex;
-
-        if (direction == Direction.LEFT) {
-            receiverIndex = (InetSocketAddress) cc.getLeftNeighorOf(senderIndex);
-            endpoint.send(receiverIndex, new HandoffRequest(fish));
-        } else if (direction == Direction.RIGHT) {
-            receiverIndex = (InetSocketAddress) cc.getRightNeighorOf(senderIndex);
-            endpoint.send(receiverIndex, new HandoffRequest(fish));
-        } else {
-            System.out.println("Direction error");
-        }
-    }
 }
