@@ -39,9 +39,10 @@ public class Broker {
             if (msg.getPayload() instanceof DeregisterRequest)
                 deregister(msg);
 
-            if (msg.getPayload() instanceof PoisonPill)
+            if (msg.getPayload() instanceof PoisonPill) {
                 System.out.println("Broker stopped with Poison Pill.");
-                System.exit(0);
+                executor.shutdown();
+            }
         }
 
         public static void register(Message msg) {
@@ -85,7 +86,7 @@ public class Broker {
     }
     static int NUMTHREADS = 4;
 
-    ExecutorService executor = Executors.newFixedThreadPool(NUMTHREADS);
+    volatile ExecutorService executor = Executors.newFixedThreadPool(NUMTHREADS);
 
     static volatile ReadWriteLock lock = new ReentrantReadWriteLock();
 
