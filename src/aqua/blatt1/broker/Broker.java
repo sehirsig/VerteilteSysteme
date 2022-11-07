@@ -103,6 +103,7 @@ public class Broker {
     }
 
     public void broker() {
+        //nicht executor nehmen, sondern neuen Thread
         executor.execute(() -> {
             JOptionPane.showMessageDialog(null, "Press OK to stop server");
             System.out.println("Broker stopped with OK Message box.");
