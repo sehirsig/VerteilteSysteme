@@ -40,6 +40,10 @@ public class ClientCommunicator {
 				endpoint.send(receiver, new HandoffRequest(fish));
 			}
 		}
+
+		public void handToken(InetSocketAddress receiver) {
+			endpoint.send(receiver, new Token());
+		}
 	}
 
 	public class ClientReceiver extends Thread {
@@ -62,6 +66,10 @@ public class ClientCommunicator {
 
 				if (msg.getPayload() instanceof NeighborUpdate) {
 					tankModel.updateNeighbors(((NeighborUpdate) msg.getPayload()).getLeftNeighbor(), ((NeighborUpdate) msg.getPayload()).getRightNeighboar());
+				}
+
+				if (msg.getPayload() instanceof Token) {
+					tankModel.receiveToken();
 				}
 
 			}

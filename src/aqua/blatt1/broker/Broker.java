@@ -52,6 +52,7 @@ public class Broker {
             if (cc.size() == 1) {
                 InetSocketAddress client = cc.getClient(clientIndex);
                 endpoint.send(client, new NeighborUpdate(client, client));
+                endpoint.send(client, new Token());
             } else {
                 InetSocketAddress client = cc.getClient(clientIndex);
                 InetSocketAddress leftNeighbor = cc.getLeftNeighorOf(clientIndex);
