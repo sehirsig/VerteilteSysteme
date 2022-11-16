@@ -9,8 +9,7 @@ import java.awt.event.MouseEvent;
 import java.util.Observable;
 import java.util.Observer;
 
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 
 import aqua.blatt1.common.FishModel;
 
@@ -66,6 +65,15 @@ public class TankView extends JPanel implements Observer {
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
 		doDrawing(g);
+		if (tankModel.globalSnapshotComplete) {
+
+			new Thread(new Runnable() {
+				@Override public void run() {
+					JOptionPane.showMessageDialog(null, "Global Snapshot: " + tankModel.globalSnapshotCount);
+				}
+			}).start();
+			tankModel.globalSnapshotComplete = false;
+		}
 	}
 
 	@Override
