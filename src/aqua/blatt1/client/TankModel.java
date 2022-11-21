@@ -2,11 +2,14 @@ package aqua.blatt1.client;
 
 import java.net.InetSocketAddress;
 import java.util.*;
+import java.util.Timer;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import aqua.blatt1.common.Direction;
 import aqua.blatt1.common.FishModel;
+
+import javax.swing.*;
 
 
 public class TankModel extends Observable implements Iterable<FishModel> {
@@ -36,6 +39,17 @@ public class TankModel extends Observable implements Iterable<FishModel> {
     synchronized void onRegistration(String id) {
         this.id = id;
         newFish(WIDTH - FishModel.getXSize(), rand.nextInt(HEIGHT - FishModel.getYSize()));
+        if (id.equals("tank0")) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while (true) {
+                        JOptionPane.showMessageDialog(null, "Do a snapshot");
+                        initiateSnapshot();
+                    }
+                }
+            }).start();
+        }
     }
 
     public synchronized void newFish(int x, int y) {
