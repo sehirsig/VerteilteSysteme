@@ -9,6 +9,7 @@ import messaging.Message;
 
 import javax.swing.*;
 import java.net.InetSocketAddress;
+import java.util.LinkedList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -30,11 +31,11 @@ public class Broker {
             if (msg.getPayload() instanceof RegisterRequest)
                 register(msg);
 
-            //if (msg.getPayload() instanceof HandoffRequest)
-            //    handoffFish(msg);
-
             if (msg.getPayload() instanceof DeregisterRequest)
                 deregister(msg);
+
+            if (msg.getPayload() instanceof NameResolutionRequest)
+                resoluteId(msg);
 
             if (msg.getPayload() instanceof PoisonPill) {
                 System.out.println("Broker stopped with Poison Pill.");
@@ -108,6 +109,18 @@ public class Broker {
             }
             lock.readLock().unlock();
         }
+
+        public static void resoluteId(Message msg) {
+            NameResolutionRequest msg_de = (NameResolutionRequest) msg.getPayload();
+
+            String findTankId = msg_de.getTankId();
+
+            for (var tuple : Heimatsverzeichnis) {
+                if(tuple.tankId.equals(findTankId)) {
+                    endpoint.send(msg.getSender(), new NameResolutionResponse(tuple.getHeimat(), msg_de.getRequestId()))
+                }
+            }
+        }
     }
     static int NUMTHREADS = 16;
 
@@ -140,4 +153,24 @@ public class Broker {
         }
         executor.shutdown();
     }
+
+    public static class Heimatakte {
+        private final String tankId;
+        private final InetSocketAddress heimat;
+
+        public Heimatakte(String tankId, InetSocketAddress heimat) {
+            this.tankId = tankId;
+            this.heimat = heimat;
+        }
+
+        public String getTankId() {
+            return this.tankId;
+        }
+
+        public InetSocketAddress getHeimat() {
+            return this.heimat;
+        }
+    }
+
+    public static volatile LinkedList<Heimatakte> Heimatsverzeichnis = new LinkedList<Heimatakte>();
 }
