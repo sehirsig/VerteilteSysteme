@@ -54,6 +54,7 @@ public class TankModel extends Observable implements Iterable<FishModel> {
             }
 
             fishies.add(fish);
+            homeAgent.add(new HeimatAgent(null, fish));
             fishTrack.add(new FishTracker(location.HERE, fish));
         }
     }
@@ -72,6 +73,16 @@ public class TankModel extends Observable implements Iterable<FishModel> {
         }
         if (!foundFish) {
             fishTrack.add(new FishTracker(location.HERE, fish));
+        }
+
+        boolean homeFishFound = false;
+        for (var tempFish : homeAgent) {
+            if (tempFish.getFish().getId().equals(fish.getId())) {
+                homeFishFound = true;
+            }
+        }
+        if (!homeFishFound) {
+            forwarder.sendNameResolutionRequest(fish.getTankId(), fish.getId());
         }
 
         fish.setToStart();
@@ -328,5 +339,28 @@ public class TankModel extends Observable implements Iterable<FishModel> {
             }
         }
     }
+
+    public static class HeimatAgent {
+        private InetSocketAddress aktuelleAdresse;
+        private FishModel fish;
+
+        public HeimatAgent(InetSocketAddress aktuelleAdresse, FishModel newFish) {
+            this.aktuelleAdresse = aktuelleAdresse;
+            fish = newFish;
+        }
+
+        public InetSocketAddress getCurrentLocation() {
+            return this.aktuelleAdresse;
+        }
+
+        public void setCurrentLocation(InetSocketAddress aktuelleAdresse) {
+            this.aktuelleAdresse = aktuelleAdresse;
+        }
+
+        public FishModel getFish() {
+            return this.fish;
+        }
+    }
+    public ArrayList<HeimatAgent> homeAgent = new ArrayList<HeimatAgent>();
 
 }

@@ -55,6 +55,10 @@ public class ClientCommunicator {
 		public void searchFish(InetSocketAddress receiver, String fishId) {
 			endpoint.send(receiver, new LocationRequest(fishId));
 		}
+
+		public void sendNameResolutionRequest(String tankId, String requestId) {
+			endpoint.send(broker, new NameResolutionRequest(tankId, requestId));
+		}
 	}
 
 	public class ClientReceiver extends Thread {
@@ -92,6 +96,10 @@ public class ClientCommunicator {
 				}
 
 				if (msg.getPayload() instanceof LocationRequest) {
+					tankModel.locateFishGlobally(((LocationRequest) msg.getPayload()).getFishId());
+				}
+
+				if (msg.getPayload() instanceof NameResolutionResponse) {
 					tankModel.locateFishGlobally(((LocationRequest) msg.getPayload()).getFishId());
 				}
 
