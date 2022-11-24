@@ -51,6 +51,10 @@ public class ClientCommunicator {
 		public void handSnapshotToken(InetSocketAddress receiver, int count) {
 			endpoint.send(receiver, new SnapshotToken(count));
 		}
+
+		public void searchFish(InetSocketAddress receiver, String fishId) {
+			endpoint.send(receiver, new LocationRequest(fishId));
+		}
 	}
 
 	public class ClientReceiver extends Thread {
@@ -85,6 +89,10 @@ public class ClientCommunicator {
 
 				if (msg.getPayload() instanceof SnapshotToken) {
 					tankModel.receiveSnapshotToken(((SnapshotToken) msg.getPayload()).getCount());
+				}
+
+				if (msg.getPayload() instanceof LocationRequest) {
+					tankModel.locateFishGlobally(((LocationRequest) msg.getPayload()).getFishId());
 				}
 
 			}

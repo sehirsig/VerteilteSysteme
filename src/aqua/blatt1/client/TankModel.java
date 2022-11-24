@@ -39,17 +39,6 @@ public class TankModel extends Observable implements Iterable<FishModel> {
     synchronized void onRegistration(String id) {
         this.id = id;
         newFish(WIDTH - FishModel.getXSize(), rand.nextInt(HEIGHT - FishModel.getYSize()));
-        if (id.equals("tank0")) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    while (true) {
-                        JOptionPane.showMessageDialog(null, "Do a snapshot");
-                        initiateSnapshot();
-                    }
-                }
-            }).start();
-        }
     }
 
     public synchronized void newFish(int x, int y) {
@@ -65,6 +54,7 @@ public class TankModel extends Observable implements Iterable<FishModel> {
             }
 
             fishies.add(fish);
+            fishTrack.add(new FishTracker(location.HERE, fish));
         }
     }
 
@@ -72,6 +62,18 @@ public class TankModel extends Observable implements Iterable<FishModel> {
         if (!(this.aufzeichnunsmodus == MODUS.IDLE)) {
             this.lokaler_zustand += 1;
         }
+
+        boolean foundFish = false;
+        for (var tempFish : fishTrack) {
+            if (tempFish.fish.equals(fish)) {
+                tempFish.setLocation(location.HERE);
+                foundFish = true;
+            }
+        }
+        if (!foundFish) {
+            fishTrack.add(new FishTracker(location.HERE, fish));
+        }
+
         fish.setToStart();
         fishies.add(fish);
     }
@@ -121,8 +123,18 @@ public class TankModel extends Observable implements Iterable<FishModel> {
                     Direction direction = fish.getDirection();
                     if (direction.equals(Direction.LEFT)) {
                         forwarder.handOff(leftNeighbor, fish);
+                        for (var tempFish : fishTrack) {
+                            if (tempFish.fish.equals(fish)) {
+                                tempFish.setLocation(location.LEFT);
+                            }
+                        }
                     } else {
                         forwarder.handOff(rightNeighbor, fish);
+                        for (var tempFish : fishTrack) {
+                            if (tempFish.fish.equals(fish)) {
+                                tempFish.setLocation(location.RIGHT);
+                            }
+                        }
                     }
                 } else {
                     System.out.println("No token, reverse fish: " + fish.getId());
@@ -266,6 +278,53 @@ public class TankModel extends Observable implements Iterable<FishModel> {
                 this.forwarder.handSnapshotToken(this.leftNeighbor, this.globalSnapshotCount);
                 this.hasSnapshotToken = false;
                 this.lokaler_zustand = -1;
+            }
+        }
+    }
+
+    public enum location {HERE, LEFT, RIGHT}
+
+    ;
+
+    public ArrayList<FishTracker> fishTrack = new ArrayList<FishTracker>();
+
+    public static class FishTracker {
+        private location loc;
+        private FishModel fish;
+
+        public FishTracker(location l, FishModel newFish) {
+            loc = l;
+            fish = newFish;
+        }
+
+        public location getLocation() {
+            return this.loc;
+        }
+
+        public void setLocation(location l) {
+            this.loc = l;
+        }
+
+        public FishModel getFish() {
+            return this.fish;
+        }
+
+    }
+
+    public synchronized void locateFishGlobally(String fishId) {
+        for (var fish : fishies) {
+            if (fish.getId().equals(fishId)) {
+                System.out.println(fishId + " is here!");
+                return;
+            }
+        }
+        for (var fish : fishTrack) {
+            if (fishId.equals(fish.getFish().getId())) {
+                if (fish.getLocation() == location.LEFT) {
+                    forwarder.searchFish(leftNeighbor, fishId);
+                } else if (fish.getLocation() == location.RIGHT) {
+                    forwarder.searchFish(rightNeighbor, fishId);
+                }
             }
         }
     }
