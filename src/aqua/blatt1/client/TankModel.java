@@ -55,7 +55,7 @@ public class TankModel extends Observable implements Iterable<FishModel> {
 
             fishies.add(fish);
             homeAgent.add(new HeimatAgent(null, fish));
-            fishTrack.add(new FishTracker(location.HERE, fish));
+            //fishTrack.add(new FishTracker(location.HERE, fish));
         }
     }
 
@@ -64,24 +64,26 @@ public class TankModel extends Observable implements Iterable<FishModel> {
             this.lokaler_zustand += 1;
         }
 
-        boolean foundFish = false;
-        for (var tempFish : fishTrack) {
-            if (tempFish.fish.equals(fish)) {
-                tempFish.setLocation(location.HERE);
-                foundFish = true;
-            }
-        }
-        if (!foundFish) {
-            fishTrack.add(new FishTracker(location.HERE, fish));
-        }
+        //boolean foundFish = false;
+        //for (var tempFish : fishTrack) {
+        //    if (tempFish.fish.equals(fish)) {
+        //        tempFish.setLocation(location.HERE);
+        //        foundFish = true;
+        //    }
+        //}
+        //if (!foundFish) {
+        //    fishTrack.add(new FishTracker(location.HERE, fish));
+        //}
 
         boolean homeFishFound = false;
         for (var tempFish : homeAgent) {
             if (tempFish.getFish().getId().equals(fish.getId())) {
+                tempFish.setCurrentLocation(null);
                 homeFishFound = true;
+                break;
             }
         }
-        if (!homeFishFound) {
+        if (!homeFishFound) { //Not a fish from this tank
             forwarder.sendNameResolutionRequest(fish.getTankId(), fish.getId());
         }
 
@@ -134,18 +136,18 @@ public class TankModel extends Observable implements Iterable<FishModel> {
                     Direction direction = fish.getDirection();
                     if (direction.equals(Direction.LEFT)) {
                         forwarder.handOff(leftNeighbor, fish);
-                        for (var tempFish : fishTrack) {
-                            if (tempFish.fish.equals(fish)) {
-                                tempFish.setLocation(location.LEFT);
-                            }
-                        }
+                        //for (var tempFish : fishTrack) {
+                        //    if (tempFish.fish.equals(fish)) {
+                        //        tempFish.setLocation(location.LEFT);
+                        //    }
+                        //}
                     } else {
                         forwarder.handOff(rightNeighbor, fish);
-                        for (var tempFish : fishTrack) {
-                            if (tempFish.fish.equals(fish)) {
-                                tempFish.setLocation(location.RIGHT);
-                            }
-                        }
+                        //for (var tempFish : fishTrack) {
+                        //    if (tempFish.fish.equals(fish)) {
+                        //        tempFish.setLocation(location.RIGHT);
+                        //    }
+                        //}
                     }
                 } else {
                     System.out.println("No token, reverse fish: " + fish.getId());
@@ -297,45 +299,79 @@ public class TankModel extends Observable implements Iterable<FishModel> {
 
     ;
 
-    public ArrayList<FishTracker> fishTrack = new ArrayList<FishTracker>();
+    //public ArrayList<FishTracker> fishTrack = new ArrayList<FishTracker>();
 
-    public static class FishTracker {
-        private location loc;
-        private FishModel fish;
+    //public static class FishTracker {
+    //    private location loc;
+    //    private FishModel fish;
+//
+    //    public FishTracker(location l, FishModel newFish) {
+    //        loc = l;
+    //        fish = newFish;
+    //    }
+//
+    //    public location getLocation() {
+    //        return this.loc;
+    //    }
+//
+    //    public void setLocation(location l) {
+    //        this.loc = l;
+    //    }
+//
+    //    public FishModel getFish() {
+    //        return this.fish;
+    //    }
+//
+    //}
 
-        public FishTracker(location l, FishModel newFish) {
-            loc = l;
-            fish = newFish;
-        }
-
-        public location getLocation() {
-            return this.loc;
-        }
-
-        public void setLocation(location l) {
-            this.loc = l;
-        }
-
-        public FishModel getFish() {
-            return this.fish;
-        }
-
+    public synchronized void sendLocationUpdate(InetSocketAddress receiver, String fishId) {
+        forwarder.sendLocationUpdate(receiver, fishId);
     }
 
     public synchronized void locateFishGlobally(String fishId) {
-        for (var fish : fishies) {
-            if (fish.getId().equals(fishId)) {
-                System.out.println(fishId + " is here!");
-                return;
+        for (var tempFish : homeAgent) {
+            if (tempFish.getFish().getId().equals(fishId)) {
+                if (tempFish.getCurrentLocation() == null) {
+                    System.out.println("Fish is here: " + fishId);
+                    tempFish.getFish().toggle();
+                } else {
+                    forwarder.searchFish(tempFish.getCurrentLocation(), fishId);
+                }
+                break;
             }
         }
-        for (var fish : fishTrack) {
-            if (fishId.equals(fish.getFish().getId())) {
-                if (fish.getLocation() == location.LEFT) {
-                    forwarder.searchFish(leftNeighbor, fishId);
-                } else if (fish.getLocation() == location.RIGHT) {
-                    forwarder.searchFish(rightNeighbor, fishId);
-                }
+        //for (var fish : fishies) {
+        //    if (fish.getId().equals(fishId)) {
+        //        System.out.println(fishId + " is here!");
+        //        return;
+        //    }
+        //}
+        //for (var fish : fishTrack) {
+        //    if (fishId.equals(fish.getFish().getId())) {
+        //        if (fish.getLocation() == location.LEFT) {
+        //            forwarder.searchFish(leftNeighbor, fishId);
+        //        } else if (fish.getLocation() == location.RIGHT) {
+        //            forwarder.searchFish(rightNeighbor, fishId);
+        //        }
+        //    }
+        //}
+    }
+
+    public synchronized void locateFishLocally(String fishId) {
+        for (var fish : fishies) {
+            if (fish.getId().equals(fishId)) {
+                fish.toggle();
+                System.out.println("Fish here: " + fishId);
+            }
+        }
+    }
+
+
+    public synchronized void updateFishAddress(String fishId, InetSocketAddress newAdress) {
+        for (var tempFish : homeAgent) {
+            if (tempFish.getFish().getId().equals(fishId)) {
+                tempFish.setCurrentLocation(newAdress);
+                break;
             }
         }
     }

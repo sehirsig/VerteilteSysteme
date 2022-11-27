@@ -16,7 +16,7 @@ public class NameResolutionResponse implements Serializable {
         return this.requestId;
     }
 
-    public InetSocketAddress getTankId() {
+    public InetSocketAddress getTankAdress() {
         return this.tankAdress;
     }
 }

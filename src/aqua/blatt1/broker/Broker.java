@@ -63,7 +63,7 @@ public class Broker {
                 endpoint.send(rightNeighbor, new NeighborUpdate(client, null));
             }
 
-            ;
+            Heimatsverzeichnis.add(new Heimatakte(clientName, msg.getSender()));
             endpoint.send(msg.getSender(), new RegisterResponse(clientName));
             System.out.println("New Client added: " + clientName);
             lock.writeLock().unlock();
