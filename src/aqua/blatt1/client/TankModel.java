@@ -29,16 +29,21 @@ public class TankModel extends Observable implements Iterable<FishModel> {
 
     protected boolean token;
 
-    protected Timer timer;
+    protected Timer tokenTimer;
+
+    protected Timer leaseTimer;
 
     public TankModel(ClientCommunicator.ClientForwarder forwarder) {
         this.fishies = Collections.newSetFromMap(new ConcurrentHashMap<FishModel, Boolean>());
         this.forwarder = forwarder;
     }
 
-    synchronized void onRegistration(String id) {
+    synchronized void onRegistration(String id, int leaseDuration) {
         this.id = id;
         newFish(WIDTH - FishModel.getXSize(), rand.nextInt(HEIGHT - FishModel.getYSize()));
+        TimerTask leaseTask = new LeaseTimerTask();
+        leaseTimer = new Timer(true);
+        leaseTimer.schedule(leaseTask, leaseDuration);
     }
 
     public synchronized void newFish(int x, int y) {
@@ -192,13 +197,22 @@ public class TankModel extends Observable implements Iterable<FishModel> {
         }
     }
 
+    public class LeaseTimerTask extends TimerTask {
+        @Override
+        public void run() {
+            forwarder.register();
+            System.out.println("ReRegistered.");
+        }
+    }
+
     public synchronized void receiveToken() {
         System.out.println("Received Token");
         this.token = true;
         TimerTask tokenTask = new TokenTimerTask();
-        timer = new Timer(true);
-        timer.schedule(tokenTask, 2000);
+        tokenTimer = new Timer(true);
+        tokenTimer.schedule(tokenTask, 2000);
     }
+
 
     public synchronized boolean hasToken() {
         return this.token;

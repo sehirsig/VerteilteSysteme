@@ -1,7 +1,6 @@
 package aqua.blatt1.broker;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /*
  * This class is not thread-safe and hence must be used in a thread-safe way, e.g. thread confined or 
@@ -13,13 +12,21 @@ public class ClientCollection<T> {
 		final String id;
 		final T client;
 
+		public Date time;
+
 		Client(String id, T client) {
 			this.id = id;
 			this.client = client;
+			this.time = new Date();
+		}
+
+		public Date getTime() {
+			return this.time;
 		}
 	}
 
 	private final List<Client> clients;
+
 
 	public ClientCollection() {
 		clients = new ArrayList<Client>();
@@ -53,8 +60,16 @@ public class ClientCollection<T> {
 		return clients.get(index).client;
 	}
 
+	public String getClientName(int index) { return clients.get(index).id; }
+
+	public Date getClientDate(int index) { return clients.get(index).time; }
+
 	public int size() {
 		return clients.size();
+	}
+
+	public void updateTime(int index) {
+		clients.get(index).time = new Date();
 	}
 
 	public T getLeftNeighorOf(int index) {

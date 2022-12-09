@@ -9,7 +9,10 @@ import messaging.Message;
 
 import javax.swing.*;
 import java.net.InetSocketAddress;
+import java.util.Date;
 import java.util.LinkedList;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -44,9 +47,23 @@ public class Broker {
             }
         }
 
+
         public static void register(Message msg) {
             lock.writeLock().lock();
+
+            if (cc.indexOf(msg.getSender()) != -1) { // wenn es den client schon gibt
+                int clientIndex = cc.indexOf(msg.getSender());
+                cc.updateTime(clientIndex);
+                String hostname = cc.getClientName(clientIndex);
+                int standardLeaseDuration = 10000 / (cc.size() + 1); //in Milliseconds
+                endpoint.send(msg.getSender(), new RegisterResponse(hostname, standardLeaseDuration));
+                System.out.println("Client update: " + hostname);
+                lock.writeLock().unlock();
+                return;
+            }
+
             String clientName = "tank" + tankcounter++;
+
             cc.add(clientName, msg.getSender());
 
             int clientIndex = cc.indexOf(msg.getSender());
@@ -64,7 +81,10 @@ public class Broker {
             }
 
             Heimatsverzeichnis.add(new Heimatakte(clientName, msg.getSender()));
-            endpoint.send(msg.getSender(), new RegisterResponse(clientName));
+
+
+            int standardLeaseDuration = 10000 / (cc.size() + 1); //in Milliseconds
+            endpoint.send(msg.getSender(), new RegisterResponse(clientName, standardLeaseDuration));
             System.out.println("New Client added: " + clientName);
             lock.writeLock().unlock();
         }
@@ -139,6 +159,13 @@ public class Broker {
         broker.broker();
     }
 
+    public static void runLeaseCleaner() {
+        System.out.println("Start LeaseCleaner");
+        TimerTask leaseCleanTask = new LeaseCleanTimerTask();
+        leaseTimer = new Timer(true);
+        leaseTimer.schedule(leaseCleanTask, 5000);
+    }
+
     public void broker() {
         //nicht executor nehmen, sondern neuen Thread
         executor.execute(() -> {
@@ -146,6 +173,7 @@ public class Broker {
             System.out.println("Broker stopped with OK Message box.");
             stopRequested = true;
         });
+        executor.execute(Broker::runLeaseCleaner);
         while (!stopRequested) {
             Message msg = endpoint.blockingReceive();
             BrokerTask brokerTask = new BrokerTask(msg);
@@ -173,4 +201,39 @@ public class Broker {
     }
 
     public static volatile LinkedList<Heimatakte> Heimatsverzeichnis = new LinkedList<Heimatakte>();
+
+
+    private static Timer leaseTimer;
+
+    public static class LeaseCleanTimerTask extends TimerTask {
+        @Override
+        public void run() {
+            Date now = new Date();
+
+            for (int i = 0; i < cc.size(); i++) {
+                now = new Date();
+                long diffInMillies = cc.getClientDate(i).getTime() - now.getTime();
+                int standardLeaseDuration = 10000 / (cc.size() + 1); //in Milliseconds
+                if (diffInMillies > standardLeaseDuration) {
+                    lock.writeLock().lock();
+                    if (cc.size() == 1) {
+                        InetSocketAddress client = cc.getClient(0);
+                        endpoint.send(client, new NeighborUpdate(client, client));
+                    } else {
+                        InetSocketAddress leftNeighbor = cc.getLeftNeighorOf(i);
+                        InetSocketAddress rightNeighbor = cc.getRightNeighorOf(i);
+                        endpoint.send(leftNeighbor, new NeighborUpdate(null, rightNeighbor));
+                        endpoint.send(rightNeighbor, new NeighborUpdate(leftNeighbor, null));
+                    }
+
+                    String name = cc.getClient(i).getHostName();
+                    cc.remove(i);
+                    System.out.println("Deregistered " + name + " because his lease is out.");
+                    lock.writeLock().unlock();
+                }
+            }
+            System.out.println("Cleaner cleaned.");
+            runLeaseCleaner();
+        }
+    }
 }
