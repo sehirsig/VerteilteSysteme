@@ -4,6 +4,7 @@ import java.net.InetSocketAddress;
 
 import javax.swing.JOptionPane;
 
+import aqua.blatt1.common.security.SecureEndpoint;
 import messaging.Endpoint;
 import aqua.blatt1.common.Properties;
 
@@ -12,7 +13,7 @@ public class Poisoner {
 	private final InetSocketAddress broker;
 
 	public Poisoner() {
-		this.endpoint = new Endpoint();
+		this.endpoint = new SecureEndpoint();
 		this.broker = new InetSocketAddress(Properties.HOST, Properties.PORT);
 	}
 

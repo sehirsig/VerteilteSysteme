@@ -3,6 +3,7 @@ package aqua.blatt1.broker;
 import aqua.blatt1.common.Direction;
 import aqua.blatt1.common.FishModel;
 import aqua.blatt1.common.msgtypes.*;
+import aqua.blatt1.common.security.SecureEndpoint;
 import aqua.blatt2.broker.PoisonPill;
 import messaging.Endpoint;
 import messaging.Message;
@@ -148,7 +149,7 @@ public class Broker {
 
     static volatile ReadWriteLock lock = new ReentrantReadWriteLock();
 
-    static Endpoint endpoint = new Endpoint(4711);
+    static Endpoint endpoint = new SecureEndpoint(4711);
     static volatile ClientCollection<InetSocketAddress> cc = new ClientCollection<InetSocketAddress>();
     static volatile int tankcounter = 0;
 
