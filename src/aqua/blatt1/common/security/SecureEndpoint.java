@@ -88,9 +88,7 @@ public class SecureEndpoint extends Endpoint {
 
     @Override
     public Message blockingReceive() {
-        System.out.println("Received");
         Message encryptedMessage = endpoint.blockingReceive();
-        System.out.println("Received: " + encryptedMessage.toString());
         return decrypt(encryptedMessage);
     }
 
