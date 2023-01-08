@@ -33,7 +33,7 @@ public class SecureEndpoint extends Endpoint {
         }
     }
     public SecureEndpoint(int port) {
-        this.endpoint = new Endpoint();
+        this.endpoint = new Endpoint(port);
         try {
             encryptor = Cipher.getInstance(CRYPTO_ALGORITM);
             decryptor = Cipher.getInstance(CRYPTO_ALGORITM);
@@ -51,12 +51,9 @@ public class SecureEndpoint extends Endpoint {
 
     private void encrypt(InetSocketAddress address, Serializable payload) {
         try {
-            System.out.println("Encrypt: " + payload.toString());
-            encryptor.init(Cipher.DECRYPT_MODE, sks);
             byte[] encrypted = encryptor.doFinal(convertToBytes(payload));
-            System.out.println("Encrypt: " + encrypted.toString());
             endpoint.send(address, encrypted);
-        }catch (InvalidKeyException | IllegalBlockSizeException | IOException e) {
+        }catch (IllegalBlockSizeException | IOException e) {
             e.printStackTrace();
         } catch (BadPaddingException e) {
             throw new RuntimeException(e);
@@ -80,8 +77,7 @@ public class SecureEndpoint extends Endpoint {
 
     private Message decrypt(Message encryptedMessage) {
         try {
-            byte[] decrypted = decryptor.doFinal(convertToBytes(encryptedMessage.getPayload()) );
-            System.out.println("Decrypt: " + convertFromBytes(decrypted).toString());
+            byte[] decrypted = decryptor.doFinal((byte[]) encryptedMessage.getPayload());
             return new Message((Serializable) convertFromBytes(decrypted), encryptedMessage.getSender());
         } catch (IllegalBlockSizeException | ClassNotFoundException | IOException | BadPaddingException e) {
             e.printStackTrace();
@@ -92,7 +88,9 @@ public class SecureEndpoint extends Endpoint {
 
     @Override
     public Message blockingReceive() {
+        System.out.println("Received");
         Message encryptedMessage = endpoint.blockingReceive();
+        System.out.println("Received: " + encryptedMessage.toString());
         return decrypt(encryptedMessage);
     }
 
