@@ -72,12 +72,20 @@ public class ClientCollection<T> {
 		clients.get(index).time = new Date();
 	}
 
-	public T getLeftNeighorOf(int index) {
+	public T getLeftNeighborOf(int index) {
 		return index == 0 ? clients.get(clients.size() - 1).client : clients.get(index - 1).client;
 	}
 
-	public T getRightNeighorOf(int index) {
+	public T getRightNeighborOf(int index) {
 		return index < clients.size() - 1 ? clients.get(index + 1).client : clients.get(0).client;
+	}
+
+	public T getLeftNeighborOf(T t) {
+		return getLeftNeighborOf(indexOf(t));
+	}
+
+	public T getRightNeighborOf(T t) {
+		return getRightNeighborOf(indexOf(t));
 	}
 
 }

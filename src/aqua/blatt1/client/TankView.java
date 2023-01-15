@@ -65,15 +65,6 @@ public class TankView extends JPanel implements Observer {
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
 		doDrawing(g);
-		if (tankModel.globalSnapshotComplete) {
-
-			new Thread(new Runnable() {
-				@Override public void run() {
-					JOptionPane.showMessageDialog(null, "Global Snapshot: " + tankModel.globalSnapshotCount);
-				}
-			}).start();
-			tankModel.globalSnapshotComplete = false;
-		}
 	}
 
 	@Override
