@@ -23,9 +23,11 @@ public class Broker {
 
     private class BrokerTask implements Runnable {
         Message message;
+
         BrokerTask(Message msg) {
             message = msg;
         }
+
         @Override
         public void run() {
             this.verarbeiten(message);
@@ -137,12 +139,13 @@ public class Broker {
             String findTankId = msg_de.getTankId();
 
             for (var tuple : Heimatsverzeichnis) {
-                if(tuple.tankId.equals(findTankId)) {
+                if (tuple.tankId.equals(findTankId)) {
                     endpoint.send(msg.getSender(), new NameResolutionResponse(tuple.getHeimat(), msg_de.getRequestId()));
                 }
             }
         }
     }
+
     static int NUMTHREADS = 16;
 
     volatile ExecutorService executor = Executors.newFixedThreadPool(NUMTHREADS);
